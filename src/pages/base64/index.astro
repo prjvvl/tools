@@ -1,0 +1,11 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+import Base64Tool from "../../tools/base64/Base64Tool";
+import { tools } from "../../tools/registry";
+
+const tool = tools.find((t) => t.slug === "base64")!;
+---
+
+<ToolLayout title={tool.title} description={tool.description}>
+  <Base64Tool client:only="react" />
+</ToolLayout>

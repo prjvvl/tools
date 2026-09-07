@@ -1,0 +1,11 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+import CaseConverter from "../../tools/case-converter/CaseConverter";
+import { tools } from "../../tools/registry";
+
+const tool = tools.find((t) => t.slug === "case-converter")!;
+---
+
+<ToolLayout title={tool.title} description={tool.description}>
+  <CaseConverter client:only="react" />
+</ToolLayout>

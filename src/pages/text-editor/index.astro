@@ -1,0 +1,11 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+import TextEditor from "../../tools/text-editor/TextEditor";
+import { tools } from "../../tools/registry";
+
+const tool = tools.find((t) => t.slug === "text-editor")!;
+---
+
+<ToolLayout title={tool.title} description={tool.description}>
+  <TextEditor client:only="react" />
+</ToolLayout>

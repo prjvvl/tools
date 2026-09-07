@@ -1,0 +1,20 @@
+---
+import BaseLayout from "./BaseLayout.astro";
+
+interface Props {
+  title: string;
+  description: string;
+}
+
+const { title, description } = Astro.props;
+---
+
+<BaseLayout title={title} description={description} navTitle={title}>
+  <div class="mx-auto max-w-5xl px-4 py-8">
+    <!-- The nav's brand slot already shows the tool name (see Nav.astro),
+         so this heading exists for accessibility/SEO (a page needs a real
+         h1) without adding a second visible title above the tool. -->
+    <h1 class="sr-only">{title}</h1>
+    <slot />
+  </div>
+</BaseLayout>

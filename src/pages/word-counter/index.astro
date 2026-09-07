@@ -1,0 +1,11 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+import WordCounter from "../../tools/word-counter/WordCounter";
+import { tools } from "../../tools/registry";
+
+const tool = tools.find((t) => t.slug === "word-counter")!;
+---
+
+<ToolLayout title={tool.title} description={tool.description}>
+  <WordCounter client:only="react" />
+</ToolLayout>

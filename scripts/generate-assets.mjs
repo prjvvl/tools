@@ -34,9 +34,11 @@ const ogSvg = `
     </radialGradient>
   </defs>
   <rect x="80" y="80" width="64" height="64" rx="16" fill="#2331c7" />
-  <path d="M98 98h28M112 98v28" stroke="#ffffff" stroke-width="6" stroke-linecap="round" />
-  <text x="80" y="260" font-family="Arial, sans-serif" font-size="88" font-weight="700" fill="#ffffff">Trestle</text>
-  <text x="80" y="330" font-family="Arial, sans-serif" font-size="34" fill="#c7cbf5">A GitHub Pages site-building kit</text>
+  <g transform="translate(90,90) scale(1.8333)" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.106-3.105c.32-.322.863-.22.983.218a6 6 0 0 1-8.259 7.057l-7.91 7.91a1 1 0 0 1-2.999-3l7.91-7.91a6 6 0 0 1 7.057-8.259c.438.12.54.662.219.984z" />
+  </g>
+  <text x="80" y="260" font-family="Arial, sans-serif" font-size="88" font-weight="700" fill="#ffffff">Tools</text>
+  <text x="80" y="330" font-family="Arial, sans-serif" font-size="34" fill="#c7cbf5">Small, free, frontend-only tools</text>
 </svg>
 `;
 

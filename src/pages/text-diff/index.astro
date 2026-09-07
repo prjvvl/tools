@@ -1,0 +1,11 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+import TextDiff from "../../tools/text-diff/TextDiff";
+import { tools } from "../../tools/registry";
+
+const tool = tools.find((t) => t.slug === "text-diff")!;
+---
+
+<ToolLayout title={tool.title} description={tool.description}>
+  <TextDiff client:only="react" />
+</ToolLayout>

@@ -1,11 +1,11 @@
-# Trestle
+# Tools
 
-A GitHub Pages site-building kit. Clone it, edit one config file, push — you
-get a live, custom-domain, SEO-ready site with a consistent design system and
-Markdown-based content, without spending a day wiring up the deploy pipeline,
-domain, and SEO basics yourself.
+A growing collection of small, free, frontend-only tools, deployed as one
+GitHub Pages site. Live at https://prjvvl.github.io/tools/.
 
-Built on [Astro](https://astro.build) with React islands and Tailwind CSS v4.
+Built on [Trestle](https://github.com/prjvvl/trestle) (Astro + React islands +
+Tailwind CSS v4), so every tool shares the same nav, footer, design tokens,
+and deploy pipeline without sharing any runtime code with each other.
 
 ## Quickstart
 
@@ -14,66 +14,50 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:4321`.
+Open `http://localhost:4321/tools/`.
 
-1. Edit `src/site.config.ts` — name, description, domain, social links,
-   navigation.
-2. Edit brand colors and fonts in `src/styles/global.css` (the `@theme`
-   block).
-3. Add content as Markdown files in `src/content/posts/`.
-4. Push to `main` — GitHub Actions builds and deploys to GitHub Pages
-   automatically (see [Deploying](#deploying)).
+## Adding a new tool
 
-## What's included
+1. Implementation goes in `src/tools/<slug>/`: components, helpers, anything
+   the tool needs. It may only import from `src/components`, `src/lib`, and
+   `src/styles`, never from another tool's folder. Astro code-splits per
+   route, so a tool that never imports another tool's code can't leak into
+   its bundle or its runtime, no matter how heavy either one is.
+2. Add the route: `src/pages/<slug>/index.astro`, wrapping the tool's
+   interactive component in `ToolLayout` and mounting it with
+   `client:only="react"`.
+3. Register it in `src/tools/registry.ts` (slug, title, description, icon).
+   That's what puts it on the homepage grid and fills in its own page's SEO
+   meta; nothing else reads this file.
+4. Reach for the shared pieces before hand-rolling anything: `CopyField`
+   for a "generated value + copy button" pattern, `Select` for any
+   dropdown, `errorBannerClass`/`selectClass` from `lib/styles.ts` for
+   everything else.
+5. Run `npm run check && npm run build` before considering it done.
 
-- **Deploy** — a GitHub Actions workflow (`.github/workflows/deploy.yml`)
-  wired to `actions/deploy-pages`. No manual setup beyond enabling Pages on
-  the repo (see below).
-- **Custom domains** — set `domain` in `site.config.ts` and the `CNAME` file
-  is generated automatically on every build, so it doesn't get lost on a
-  rebuild.
-- **Content** — Markdown + YAML frontmatter via Astro's Content Layer API,
-  schema-validated so a malformed post fails the build with a clear error
-  instead of shipping a broken page.
-- **SEO baseline** — per-page meta tags, Open Graph tags, and an auto-
-  generated sitemap.
-- **Component set** — Nav (responsive, collapses to a mobile menu), Footer,
-  Hero, Card, Button — all styled from shared design tokens, all responsive
-  by default.
-- **CI** — every PR runs a type-check and a full build before merge.
-
-Not included yet, but planned as self-contained additions: search,
-comments, a working contact form, and PR preview deploys.
-
-## Deploying
-
-1. Push this repo to GitHub.
-2. In the repo's **Settings → Pages**, set the source to **GitHub Actions**.
-3. Push to `main` — the `deploy.yml` workflow builds and publishes the site.
-4. If using a custom domain, set it in `src/site.config.ts` (`domain` field)
-   before pushing, and point your DNS at GitHub Pages per
-   [GitHub's custom domain docs](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site).
+See `AGENTS.md` for the full rule set (design tokens, internal links, dark
+mode, tool-building conventions, etc.) inherited from Trestle plus the
+tool-specific ones above.
 
 ## Project structure
 
 ```
 src/
-  components/     Nav, Footer, Hero, Card, Button — reusable UI
-  content/posts/  Blog posts (Markdown + frontmatter)
-  content.config.ts  Content schema (Zod)
-  layouts/        BaseLayout.astro — page shell, SEO meta
-  pages/          File-based routes
-  site.config.ts  Site metadata, nav, feature flags
-  styles/         global.css — Tailwind v4 + design tokens
+  tools/<slug>/     Each tool's own implementation, isolated by convention
+  pages/<slug>/     Thin route wrapper per tool (URL = /tools/<slug>)
+  tools/registry.ts Tool metadata: drives the homepage grid + page SEO
+  components/       Nav, Footer, Card, Button, CopyField, Select: shared UI
+  layouts/          BaseLayout.astro (page shell), ToolLayout.astro (tool pages)
+  site.config.ts    Site metadata, nav
+  styles/           global.css: Tailwind v4 + design tokens
 ```
 
-## For AI coding agents
+## Deploying
 
-See `AGENTS.md` — it documents where content and config live, and the rules
-this project follows (design tokens instead of hardcoded values, schema-first
-content, etc.) so an agent working on a site built with Trestle doesn't have
-to guess.
+Push to `main`: GitHub Actions builds and publishes to GitHub Pages
+automatically. First-time setup: in the repo's **Settings → Pages**, set the
+source to **GitHub Actions**.
 
 ## License
 
-MIT — see `LICENSE`.
+MIT, see `LICENSE`.

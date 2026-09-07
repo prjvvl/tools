@@ -1,0 +1,11 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+import RegexTester from "../../tools/regex-tester/RegexTester";
+import { tools } from "../../tools/registry";
+
+const tool = tools.find((t) => t.slug === "regex-tester")!;
+---
+
+<ToolLayout title={tool.title} description={tool.description}>
+  <RegexTester client:only="react" />
+</ToolLayout>

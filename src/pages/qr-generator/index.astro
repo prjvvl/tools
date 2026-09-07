@@ -1,0 +1,11 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+import QrGenerator from "../../tools/qr-generator/QrGenerator";
+import { tools } from "../../tools/registry";
+
+const tool = tools.find((t) => t.slug === "qr-generator")!;
+---
+
+<ToolLayout title={tool.title} description={tool.description}>
+  <QrGenerator client:only="react" />
+</ToolLayout>

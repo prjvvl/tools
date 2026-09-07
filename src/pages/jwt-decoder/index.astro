@@ -1,0 +1,11 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+import JwtDecoder from "../../tools/jwt-decoder/JwtDecoder";
+import { tools } from "../../tools/registry";
+
+const tool = tools.find((t) => t.slug === "jwt-decoder")!;
+---
+
+<ToolLayout title={tool.title} description={tool.description}>
+  <JwtDecoder client:only="react" />
+</ToolLayout>

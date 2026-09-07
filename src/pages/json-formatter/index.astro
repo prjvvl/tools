@@ -1,0 +1,11 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+import JsonFormatter from "../../tools/json-formatter/JsonFormatter";
+import { tools } from "../../tools/registry";
+
+const tool = tools.find((t) => t.slug === "json-formatter")!;
+---
+
+<ToolLayout title={tool.title} description={tool.description}>
+  <JsonFormatter client:only="react" />
+</ToolLayout>

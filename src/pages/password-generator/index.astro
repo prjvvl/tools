@@ -1,0 +1,11 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+import PasswordGenerator from "../../tools/password-generator/PasswordGenerator";
+import { tools } from "../../tools/registry";
+
+const tool = tools.find((t) => t.slug === "password-generator")!;
+---
+
+<ToolLayout title={tool.title} description={tool.description}>
+  <PasswordGenerator client:only="react" />
+</ToolLayout>
