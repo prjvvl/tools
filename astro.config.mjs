@@ -31,8 +31,12 @@ function cnameIntegration() {
 // project site with no custom domain is served at
 // https://<user>.github.io/<repo>/, so the "/<repo>" part has to be
 // Astro's `base`, not baked into `site`.
-const usingCustomDomain = Boolean(siteConfig.domain);
-const fallbackURL = new URL(siteConfig.url);
+//
+// DEPLOY_URL (set by the PR preview workflow) overrides both for a
+// one-off build served from a different path, e.g. a PR preview.
+const previewURL = process.env.DEPLOY_URL ? new URL(process.env.DEPLOY_URL) : null;
+const usingCustomDomain = Boolean(siteConfig.domain) && !previewURL;
+const fallbackURL = previewURL ?? new URL(siteConfig.url);
 
 export default defineConfig({
   site: usingCustomDomain ? `https://${siteConfig.domain}` : fallbackURL.origin,
