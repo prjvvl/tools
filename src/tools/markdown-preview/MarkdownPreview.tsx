@@ -82,7 +82,10 @@ export default function MarkdownPreview() {
         const id = `md-preview-mermaid-${diagramIdRef.current++}`;
         try {
           const { svg } = await mermaid.render(id, code);
-          if (!cancelled) node.innerHTML = svg;
+          if (!cancelled) {
+            node.className = "mermaid";
+            node.innerHTML = svg;
+          }
         } catch (err) {
           if (!cancelled) {
             const message = err instanceof Error ? err.message : "Could not render this diagram.";
