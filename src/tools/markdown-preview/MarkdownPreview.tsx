@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import mermaid from "mermaid";
+import { BookOpen, Check, Code2, Copy, Download, Eye, FolderOpen, X } from "lucide-react";
 import { buttonVariantClass, errorBannerClass, pillClass } from "../../lib/styles";
 import { resolveSiteTheme, watchSiteTheme, type SiteTheme } from "../../lib/theme";
 import { renderMarkdown } from "./markdown";
@@ -150,9 +151,11 @@ export default function MarkdownPreview() {
     <div className="mx-auto max-w-6xl">
       <div className="flex flex-wrap items-center gap-3 rounded-card border border-border bg-surface p-3">
         <button type="button" onClick={() => setSource(EXAMPLE_MARKDOWN)} className={buttonVariantClass.secondary}>
+          <BookOpen className="size-4" aria-hidden="true" />
           Load Example
         </button>
         <button type="button" onClick={() => fileInputRef.current?.click()} className={buttonVariantClass.secondary}>
+          <FolderOpen className="size-4" aria-hidden="true" />
           Open File
         </button>
         <input
@@ -168,15 +171,24 @@ export default function MarkdownPreview() {
         />
         <div className="flex-1" />
         <button type="button" onClick={handleCopyHtml} className={buttonVariantClass.secondary}>
+          {copyStatus === "copied" ? (
+            <Check className="size-4" aria-hidden="true" />
+          ) : copyStatus === "failed" ? (
+            <X className="size-4" aria-hidden="true" />
+          ) : (
+            <Copy className="size-4" aria-hidden="true" />
+          )}
           {copyStatus === "copied" ? "Copied!" : copyStatus === "failed" ? "Copy failed" : "Copy HTML"}
         </button>
         <button type="button" onClick={handleDownloadHtml} className={buttonVariantClass.primary}>
+          <Download className="size-4" aria-hidden="true" />
           Download HTML
         </button>
       </div>
 
       <div className="mt-4 flex gap-2 lg:hidden">
         <button type="button" onClick={() => setMobileView("editor")} className={pillClass(mobileView === "editor")}>
+          <Code2 className="size-4" aria-hidden="true" />
           Editor
         </button>
         <button
@@ -184,6 +196,7 @@ export default function MarkdownPreview() {
           onClick={() => setMobileView("preview")}
           className={pillClass(mobileView === "preview")}
         >
+          <Eye className="size-4" aria-hidden="true" />
           Preview
         </button>
       </div>
