@@ -4,6 +4,7 @@ import {
   CaseSensitive,
   Clock,
   FileCode,
+  FileText,
   GitCompare,
   Hash,
   IdCard,
@@ -105,5 +106,11 @@ export const tools = [
     title: "Color Converter",
     description: "Convert colors between hex, RGB, and HSL, with a live preview and color picker.",
     icon: Palette,
+  },
+  {
+    slug: "markdown-preview",
+    title: "Markdown Preview",
+    description: "Preview GitHub-flavored Markdown and Mermaid diagrams live, right in your browser.",
+    icon: FileText,
   },
 ] as const;
