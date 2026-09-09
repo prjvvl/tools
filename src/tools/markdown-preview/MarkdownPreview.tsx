@@ -56,17 +56,27 @@ export default function MarkdownPreview() {
     return () => clearTimeout(timeout);
   }, [source]);
 
-  const html = useMemo(() => (debouncedSource.trim() ? renderMarkdown(debouncedSource) : ""), [debouncedSource]);
+  const { html, diagrams } = useMemo(
+    () => (debouncedSource.trim() ? renderMarkdown(debouncedSource) : { html: "", diagrams: [] }),
+    [debouncedSource],
+  );
 
   // Renders each `.mermaid` placeholder into an SVG once the sanitized HTML
   // has committed to the DOM. Failures are isolated per diagram so one bad
-  // block doesn't blank out the rest of the document.
+  // block doesn't blank out the rest of the document. Re-runs on `mobileView`
+  // too: a diagram whose pane was hidden (display:none) behind the mobile
+  // Editor/Preview toggle at render time has no layout box, and mermaid's
+  // measurement never resolves against one, so it's skipped below and
+  // picked up on the next pass once its pane becomes visible.
   useEffect(() => {
     const container = previewRef.current;
     if (!container) return;
 
     const nodes = Array.from(container.querySelectorAll<HTMLElement>(".mermaid"));
-    if (nodes.length === 0) return;
+    const pending = nodes
+      .map((node, index) => ({ node, code: diagrams[index] }))
+      .filter(({ node }) => node.dataset.renderedTheme !== theme);
+    if (pending.length === 0) return;
 
     mermaid.initialize({
       startOnLoad: false,
@@ -77,14 +87,16 @@ export default function MarkdownPreview() {
     let cancelled = false;
 
     (async () => {
-      for (const node of nodes) {
-        const code = node.textContent ?? "";
+      for (const { node, code } of pending) {
+        if (node.offsetParent === null || code === undefined) continue;
+
         const id = `md-preview-mermaid-${diagramIdRef.current++}`;
         try {
           const { svg } = await mermaid.render(id, code);
           if (!cancelled) {
             node.className = "mermaid";
             node.innerHTML = svg;
+            node.dataset.renderedTheme = theme;
           }
         } catch (err) {
           if (!cancelled) {
@@ -93,6 +105,7 @@ export default function MarkdownPreview() {
             node.className = errorBannerClass;
             node.setAttribute("role", "alert");
             node.textContent = `Invalid Mermaid diagram: ${message}`;
+            node.dataset.renderedTheme = theme;
           }
         }
       }
@@ -101,7 +114,7 @@ export default function MarkdownPreview() {
     return () => {
       cancelled = true;
     };
-  }, [html, theme]);
+  }, [html, diagrams, theme, mobileView]);
 
   function handleFile(file: File) {
     const reader = new FileReader();
