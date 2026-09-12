@@ -30,12 +30,20 @@ export const MERMAID_PENDING_CLASS =
  */
 let currentDiagrams: string[] = [];
 
+/**
+ * Each placeholder carries its array index as `data-diagram-index` so
+ * MarkdownPreview can match a DOM node back to its source by identity
+ * instead of by querySelectorAll position - position shifts once any
+ * diagram fails and loses its `mermaid` class, or if sanitized user HTML
+ * happens to contain an unrelated `.mermaid` node.
+ */
 marked.use({
   renderer: {
     code({ text, lang }) {
       if (lang === "mermaid") {
+        const index = currentDiagrams.length;
         currentDiagrams.push(text);
-        return `<div class="${MERMAID_PENDING_CLASS}"></div>`;
+        return `<div class="${MERMAID_PENDING_CLASS}" data-diagram-index="${index}"></div>`;
       }
       return false;
     },

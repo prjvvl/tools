@@ -25,7 +25,7 @@ function parseColor(input: string): Rgb | null {
       b: parseInt(hex[2] + hex[2], 16),
     };
   }
-  const rgbMatch = value.match(/^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
+  const rgbMatch = value.match(/^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*[\d.]+\s*)?\)$/i);
   if (rgbMatch) {
     const [r, g, b] = [Number(rgbMatch[1]), Number(rgbMatch[2]), Number(rgbMatch[3])];
     if ([r, g, b].every((c) => c >= 0 && c <= 255)) return { r, g, b };
@@ -88,6 +88,8 @@ export default function ColorConverter() {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="#7c3aed"
+          aria-invalid={invalid}
+          aria-describedby={invalid ? "color-input-error" : undefined}
           className="min-h-11 flex-1 rounded-card border border-border bg-bg px-3 font-mono text-sm text-fg placeholder:text-fg-muted focus:border-brand-300 focus:outline-none"
         />
         <input
@@ -100,7 +102,7 @@ export default function ColorConverter() {
       </div>
 
       {invalid && (
-        <p className={`mt-4 ${errorBannerClass}`} role="alert">
+        <p id="color-input-error" className={`mt-4 ${errorBannerClass}`} role="alert">
           Not a recognized color. Try a hex code like #7c3aed or rgb(124, 58, 237).
         </p>
       )}

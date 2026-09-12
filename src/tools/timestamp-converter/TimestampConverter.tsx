@@ -64,6 +64,8 @@ export default function TimestampConverter() {
           value={timestampInput}
           onChange={(e) => setTimestampInput(e.target.value)}
           placeholder="1700000000"
+          aria-invalid={timestampError}
+          aria-describedby={timestampError ? "ts-input-error" : undefined}
           className="min-h-11 flex-1 rounded-card border border-border bg-bg px-3 font-mono text-sm text-fg placeholder:text-fg-muted focus:border-brand-300 focus:outline-none"
         />
         <Select value={unit} onChange={(e) => setUnit(e.target.value as Unit)} aria-label="Timestamp unit">
@@ -76,7 +78,7 @@ export default function TimestampConverter() {
       </div>
 
       {timestampError && (
-        <p className={`mt-4 ${errorBannerClass}`} role="alert">
+        <p id="ts-input-error" className={`mt-4 ${errorBannerClass}`} role="alert">
           Not a valid timestamp.
         </p>
       )}

@@ -36,6 +36,89 @@ ${bodyHtml}
 `;
 }
 
+let diagramIdCounter = 0;
+
+interface RenderDiagramsOptions {
+  /** Skip nodes with no layout box (e.g. behind the mobile Editor/Preview
+   * toggle) instead of handing them to mermaid.render, which never
+   * resolves for a container inside a display:none ancestor. */
+  skipHidden: boolean;
+  isCancelled?: () => boolean;
+}
+
+/**
+ * Renders every `[data-diagram-index]` placeholder in `container` whose
+ * source or theme has changed since it was last rendered. Identity comes
+ * from the index embedded by markdown.ts, not DOM position, so a failed
+ * diagram (which loses its `mermaid` class) still maps to the right source
+ * on the next pass instead of shifting the nodes after it out of sync.
+ */
+async function renderPendingDiagrams(
+  container: HTMLElement,
+  diagrams: string[],
+  theme: SiteTheme,
+  { skipHidden, isCancelled }: RenderDiagramsOptions,
+): Promise<void> {
+  const nodes = Array.from(container.querySelectorAll<HTMLElement>("[data-diagram-index]"));
+  const pending = nodes
+    .map((node) => ({ node, code: diagrams[Number(node.dataset.diagramIndex)] }))
+    .filter(
+      ({ node, code }) =>
+        code !== undefined && (node.dataset.renderedTheme !== theme || node.dataset.renderedSource !== code),
+    );
+  if (pending.length === 0) return;
+
+  mermaid.initialize({
+    startOnLoad: false,
+    securityLevel: "strict",
+    theme: theme === "dark" ? "dark" : "default",
+  });
+
+  for (const { node, code } of pending) {
+    if (skipHidden && node.offsetParent === null) continue;
+    if (isCancelled?.()) return;
+
+    const id = `md-preview-mermaid-${diagramIdCounter++}`;
+    try {
+      const { svg } = await mermaid.render(id, code);
+      if (isCancelled?.()) return;
+      node.className = "mermaid";
+      node.innerHTML = svg;
+    } catch (err) {
+      if (isCancelled?.()) return;
+      const message = err instanceof Error ? err.message : "Could not render this diagram.";
+      node.innerHTML = "";
+      node.className = errorBannerClass;
+      node.setAttribute("role", "alert");
+      node.textContent = `Invalid Mermaid diagram: ${message}`;
+    }
+    node.dataset.renderedTheme = theme;
+    node.dataset.renderedSource = code;
+  }
+}
+
+/**
+ * Renders `html`'s diagrams in a detached, off-screen container instead of
+ * the live preview pane, so Copy HTML and Download HTML always include
+ * every diagram even when the preview pane is hidden behind the mobile
+ * Editor/Preview toggle - without flashing the visible pane to fetch them.
+ */
+async function renderMarkdownToHtml(html: string, diagrams: string[], theme: SiteTheme): Promise<string> {
+  const scratch = document.createElement("div");
+  scratch.style.position = "fixed";
+  scratch.style.top = "-9999px";
+  scratch.style.left = "-9999px";
+  scratch.style.visibility = "hidden";
+  scratch.innerHTML = html;
+  document.body.appendChild(scratch);
+  try {
+    await renderPendingDiagrams(scratch, diagrams, theme, { skipHidden: false });
+    return scratch.innerHTML;
+  } finally {
+    document.body.removeChild(scratch);
+  }
+}
+
 export default function MarkdownPreview() {
   const [source, setSource] = useState("");
   const [debouncedSource, setDebouncedSource] = useState("");
@@ -45,7 +128,6 @@ export default function MarkdownPreview() {
 
   const previewRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const diagramIdRef = useRef(0);
 
   useEffect(() => {
     setTheme(resolveSiteTheme());
@@ -62,55 +144,18 @@ export default function MarkdownPreview() {
     [debouncedSource],
   );
 
-  // Renders each `.mermaid` placeholder into an SVG once the sanitized HTML
-  // has committed to the DOM. Failures are isolated per diagram so one bad
-  // block doesn't blank out the rest of the document. Re-runs on `mobileView`
-  // too: a diagram whose pane was hidden (display:none) behind the mobile
-  // Editor/Preview toggle at render time has no layout box, and mermaid's
-  // measurement never resolves against one, so it's skipped below and
-  // picked up on the next pass once its pane becomes visible.
+  // Renders each pending placeholder into an SVG once the sanitized HTML has
+  // committed to the DOM. Re-runs on `mobileView` too: a diagram whose pane
+  // was hidden (display:none) behind the mobile Editor/Preview toggle at
+  // render time has no layout box, and mermaid's measurement never resolves
+  // against one, so it's skipped below and picked up on the next pass once
+  // its pane becomes visible.
   useEffect(() => {
     const container = previewRef.current;
     if (!container) return;
 
-    const nodes = Array.from(container.querySelectorAll<HTMLElement>(".mermaid"));
-    const pending = nodes
-      .map((node, index) => ({ node, code: diagrams[index] }))
-      .filter(({ node }) => node.dataset.renderedTheme !== theme);
-    if (pending.length === 0) return;
-
-    mermaid.initialize({
-      startOnLoad: false,
-      securityLevel: "strict",
-      theme: theme === "dark" ? "dark" : "default",
-    });
-
     let cancelled = false;
-
-    (async () => {
-      for (const { node, code } of pending) {
-        if (node.offsetParent === null || code === undefined) continue;
-
-        const id = `md-preview-mermaid-${diagramIdRef.current++}`;
-        try {
-          const { svg } = await mermaid.render(id, code);
-          if (!cancelled) {
-            node.className = "mermaid";
-            node.innerHTML = svg;
-            node.dataset.renderedTheme = theme;
-          }
-        } catch (err) {
-          if (!cancelled) {
-            const message = err instanceof Error ? err.message : "Could not render this diagram.";
-            node.innerHTML = "";
-            node.className = errorBannerClass;
-            node.setAttribute("role", "alert");
-            node.textContent = `Invalid Mermaid diagram: ${message}`;
-            node.dataset.renderedTheme = theme;
-          }
-        }
-      }
-    })();
+    renderPendingDiagrams(container, diagrams, theme, { skipHidden: true, isCancelled: () => cancelled });
 
     return () => {
       cancelled = true;
@@ -124,9 +169,9 @@ export default function MarkdownPreview() {
   }
 
   async function handleCopyHtml() {
-    if (!previewRef.current) return;
     try {
-      await navigator.clipboard.writeText(previewRef.current.innerHTML);
+      const renderedHtml = await renderMarkdownToHtml(html, diagrams, theme);
+      await navigator.clipboard.writeText(renderedHtml);
       setCopyStatus("copied");
     } catch {
       setCopyStatus("failed");
@@ -134,9 +179,9 @@ export default function MarkdownPreview() {
     setTimeout(() => setCopyStatus("idle"), 1500);
   }
 
-  function handleDownloadHtml() {
-    if (!previewRef.current) return;
-    const blob = new Blob([buildStandaloneHtml(previewRef.current.innerHTML)], { type: "text/html;charset=utf-8" });
+  async function handleDownloadHtml() {
+    const renderedHtml = await renderMarkdownToHtml(html, diagrams, theme);
+    const blob = new Blob([buildStandaloneHtml(renderedHtml)], { type: "text/html;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
