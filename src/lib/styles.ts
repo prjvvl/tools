@@ -10,7 +10,7 @@ export const cardClickableClass =
   "hover-elevate block h-full rounded-card border border-border bg-surface p-6 hover:border-brand-300";
 
 export function pillClass(active: boolean): string {
-  return `min-h-11 rounded-card px-3 text-sm transition-colors duration-200 ${
+  return `inline-flex min-h-11 items-center justify-center gap-2 rounded-card px-3 text-sm transition-colors duration-200 ${
     active
       ? "bg-brand text-brand-fg"
       : "border border-border text-fg-muted hover:border-brand-300 hover:text-fg"

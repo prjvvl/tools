@@ -1,0 +1,11 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+import MarkdownPreview from "../../tools/markdown-preview/MarkdownPreview";
+import { tools } from "../../tools/registry";
+
+const tool = tools.find((t) => t.slug === "markdown-preview")!;
+---
+
+<ToolLayout title={tool.title} description={tool.description}>
+  <MarkdownPreview client:only="react" />
+</ToolLayout>

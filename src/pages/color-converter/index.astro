@@ -1,0 +1,11 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+import ColorConverter from "../../tools/color-converter/ColorConverter";
+import { tools } from "../../tools/registry";
+
+const tool = tools.find((t) => t.slug === "color-converter")!;
+---
+
+<ToolLayout title={tool.title} description={tool.description}>
+  <ColorConverter client:only="react" />
+</ToolLayout>
