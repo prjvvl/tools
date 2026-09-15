@@ -1,0 +1,11 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+import GitignoreGeneratorTool from "../../tools/gitignore-generator/GitignoreGeneratorTool";
+import { tools } from "../../tools/registry";
+
+const tool = tools.find((t) => t.slug === "gitignore-generator")!;
+---
+
+<ToolLayout title={tool.title} description={tool.description}>
+  <GitignoreGeneratorTool client:only="react" />
+</ToolLayout>

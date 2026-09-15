@@ -1,0 +1,11 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+import LoremIpsumGeneratorTool from "../../tools/lorem-ipsum-generator/LoremIpsumGeneratorTool";
+import { tools } from "../../tools/registry";
+
+const tool = tools.find((t) => t.slug === "lorem-ipsum-generator")!;
+---
+
+<ToolLayout title={tool.title} description={tool.description}>
+  <LoremIpsumGeneratorTool client:only="react" />
+</ToolLayout>

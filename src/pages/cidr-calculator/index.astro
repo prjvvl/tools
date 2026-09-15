@@ -1,0 +1,11 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+import CidrCalculatorTool from "../../tools/cidr-calculator/CidrCalculatorTool";
+import { tools } from "../../tools/registry";
+
+const tool = tools.find((t) => t.slug === "cidr-calculator")!;
+---
+
+<ToolLayout title={tool.title} description={tool.description}>
+  <CidrCalculatorTool client:only="react" />
+</ToolLayout>

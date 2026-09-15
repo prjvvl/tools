@@ -1,0 +1,11 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+import CssGradientGeneratorTool from "../../tools/css-gradient-generator/CssGradientGeneratorTool";
+import { tools } from "../../tools/registry";
+
+const tool = tools.find((t) => t.slug === "css-gradient-generator")!;
+---
+
+<ToolLayout title={tool.title} description={tool.description}>
+  <CssGradientGeneratorTool client:only="react" />
+</ToolLayout>

@@ -1,0 +1,11 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+import CronBuilderTool from "../../tools/cron-builder/CronBuilderTool";
+import { tools } from "../../tools/registry";
+
+const tool = tools.find((t) => t.slug === "cron-builder")!;
+---
+
+<ToolLayout title={tool.title} description={tool.description}>
+  <CronBuilderTool client:only="react" />
+</ToolLayout>

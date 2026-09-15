@@ -1,0 +1,11 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+import HtmlEntitiesTool from "../../tools/html-entities/HtmlEntitiesTool";
+import { tools } from "../../tools/registry";
+
+const tool = tools.find((t) => t.slug === "html-entities")!;
+---
+
+<ToolLayout title={tool.title} description={tool.description}>
+  <HtmlEntitiesTool client:only="react" />
+</ToolLayout>

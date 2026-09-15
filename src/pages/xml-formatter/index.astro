@@ -1,0 +1,11 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+import XmlFormatterTool from "../../tools/xml-formatter/XmlFormatterTool";
+import { tools } from "../../tools/registry";
+
+const tool = tools.find((t) => t.slug === "xml-formatter")!;
+---
+
+<ToolLayout title={tool.title} description={tool.description}>
+  <XmlFormatterTool client:only="react" />
+</ToolLayout>

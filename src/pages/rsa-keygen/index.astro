@@ -1,0 +1,11 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+import RsaKeygenTool from "../../tools/rsa-keygen/RsaKeygenTool";
+import { tools } from "../../tools/registry";
+
+const tool = tools.find((t) => t.slug === "rsa-keygen")!;
+---
+
+<ToolLayout title={tool.title} description={tool.description}>
+  <RsaKeygenTool client:only="react" />
+</ToolLayout>

@@ -1,0 +1,11 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+import ContrastCheckerTool from "../../tools/contrast-checker/ContrastCheckerTool";
+import { tools } from "../../tools/registry";
+
+const tool = tools.find((t) => t.slug === "contrast-checker")!;
+---
+
+<ToolLayout title={tool.title} description={tool.description}>
+  <ContrastCheckerTool client:only="react" />
+</ToolLayout>

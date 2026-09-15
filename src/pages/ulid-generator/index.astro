@@ -1,0 +1,11 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+import UlidGeneratorTool from "../../tools/ulid-generator/UlidGeneratorTool";
+import { tools } from "../../tools/registry";
+
+const tool = tools.find((t) => t.slug === "ulid-generator")!;
+---
+
+<ToolLayout title={tool.title} description={tool.description}>
+  <UlidGeneratorTool client:only="react" />
+</ToolLayout>

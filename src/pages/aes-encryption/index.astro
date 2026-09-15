@@ -1,0 +1,11 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+import AesEncryptionTool from "../../tools/aes-encryption/AesEncryptionTool";
+import { tools } from "../../tools/registry";
+
+const tool = tools.find((t) => t.slug === "aes-encryption")!;
+---
+
+<ToolLayout title={tool.title} description={tool.description}>
+  <AesEncryptionTool client:only="react" />
+</ToolLayout>

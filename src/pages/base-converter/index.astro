@@ -1,0 +1,11 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+import BaseConverterTool from "../../tools/base-converter/BaseConverterTool";
+import { tools } from "../../tools/registry";
+
+const tool = tools.find((t) => t.slug === "base-converter")!;
+---
+
+<ToolLayout title={tool.title} description={tool.description}>
+  <BaseConverterTool client:only="react" />
+</ToolLayout>
