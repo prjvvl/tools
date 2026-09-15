@@ -3,6 +3,7 @@ import { Menu, X } from "@lucide/astro";
 import { siteConfig } from "../site.config";
 import { withBase } from "../lib/url";
 import ThemeToggle from "./ThemeToggle.astro";
+import CommandPalette from "./CommandPalette.astro";
 
 interface Props {
   /** Shown in the brand slot instead of the site name. Used on tool pages
@@ -34,7 +35,8 @@ const { navTitle } = Astro.props;
       }
     </nav>
 
-    <div class="flex items-center gap-1">
+    <div class="flex items-center gap-2">
+      <CommandPalette />
       <ThemeToggle />
 
       <button

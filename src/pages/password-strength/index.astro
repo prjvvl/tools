@@ -1,0 +1,11 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+import PasswordStrengthTool from "../../tools/password-strength/PasswordStrengthTool";
+import { tools } from "../../tools/registry";
+
+const tool = tools.find((t) => t.slug === "password-strength")!;
+---
+
+<ToolLayout title={tool.title} description={tool.description}>
+  <PasswordStrengthTool client:only="react" />
+</ToolLayout>

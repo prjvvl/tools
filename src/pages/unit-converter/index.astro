@@ -1,0 +1,11 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+import UnitConverterTool from "../../tools/unit-converter/UnitConverterTool";
+import { tools } from "../../tools/registry";
+
+const tool = tools.find((t) => t.slug === "unit-converter")!;
+---
+
+<ToolLayout title={tool.title} description={tool.description}>
+  <UnitConverterTool client:only="react" />
+</ToolLayout>

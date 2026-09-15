@@ -1,0 +1,11 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+import YamlJsonConverter from "../../tools/yaml-json-converter/YamlJsonConverter";
+import { tools } from "../../tools/registry";
+
+const tool = tools.find((t) => t.slug === "yaml-json-converter")!;
+---
+
+<ToolLayout title={tool.title} description={tool.description}>
+  <YamlJsonConverter client:only="react" />
+</ToolLayout>

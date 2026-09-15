@@ -1,0 +1,11 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+import UrlEncoderTool from "../../tools/url-encoder/UrlEncoderTool";
+import { tools } from "../../tools/registry";
+
+const tool = tools.find((t) => t.slug === "url-encoder")!;
+---
+
+<ToolLayout title={tool.title} description={tool.description}>
+  <UrlEncoderTool client:only="react" />
+</ToolLayout>

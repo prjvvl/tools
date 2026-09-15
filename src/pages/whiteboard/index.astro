@@ -1,0 +1,11 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+import WhiteboardTool from "../../tools/whiteboard/WhiteboardTool";
+import { tools } from "../../tools/registry";
+
+const tool = tools.find((t) => t.slug === "whiteboard")!;
+---
+
+<ToolLayout title={tool.title} description={tool.description}>
+  <WhiteboardTool client:only="react" />
+</ToolLayout>

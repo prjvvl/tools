@@ -1,14 +1,22 @@
 ---
+import { Star } from "@lucide/astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import Card from "../components/Card.astro";
 import { siteConfig } from "../site.config";
-import { tools } from "../tools/registry";
+import { tools, categories } from "../tools/registry";
+
+const groups = categories
+  .map((category) => ({
+    category,
+    tools: tools.filter((t) => t.category === category.id),
+  }))
+  .filter((group) => group.tools.length > 0);
 ---
 
 <BaseLayout title={siteConfig.name}>
   <section class="mx-auto max-w-5xl px-4 pt-10 pb-20">
     <h1 class="sr-only">{siteConfig.name}</h1>
-    <div class="mx-auto mb-8 max-w-md">
+    <div class="mx-auto mb-10 max-w-md">
       <label for="tool-search" class="sr-only">Search tools</label>
       <input
         id="tool-search"
@@ -18,17 +26,46 @@ import { tools } from "../tools/registry";
       />
     </div>
 
-    <div class="grid gap-6 sm:grid-cols-2 md:grid-cols-3">
-      {
-        tools.map(({ slug, title, description, icon: Icon }) => (
-          <div data-tool-card data-search={`${title} ${description}`.toLowerCase()}>
-            <Card href={`/${slug}`} title={title} description={description}>
-              <Icon slot="icon" class="size-5 text-brand" aria-hidden="true" />
-            </Card>
+    <section id="favorites-section" class="mb-10" hidden>
+      <h2 class="mb-4 text-lg font-semibold text-fg">Favorites</h2>
+      <div id="favorites-grid" class="grid gap-6 sm:grid-cols-2 md:grid-cols-3"></div>
+    </section>
+
+    <section id="recent-section" class="mb-10" hidden>
+      <h2 class="mb-4 text-lg font-semibold text-fg">Recently used</h2>
+      <div id="recent-grid" class="grid gap-6 sm:grid-cols-2 md:grid-cols-3"></div>
+    </section>
+
+    {
+      groups.map(({ category, tools: groupTools }) => (
+        <section data-category-section data-category-id={category.id} class="mb-10">
+          <h2 class="mb-4 text-lg font-semibold text-fg">{category.label}</h2>
+          <div class="grid gap-6 sm:grid-cols-2 md:grid-cols-3">
+            {groupTools.map(({ slug, title, description, icon: Icon }) => (
+              <div
+                data-tool-card
+                data-slug={slug}
+                data-search={`${title} ${description}`.toLowerCase()}
+                class="relative"
+              >
+                <Card href={`/${slug}`} title={title} description={description}>
+                  <Icon slot="icon" class="size-5 text-brand" aria-hidden="true" />
+                </Card>
+                <button
+                  type="button"
+                  class="favorite-toggle hover-elevate absolute top-2 right-2 inline-flex size-8 items-center justify-center rounded-full text-fg-muted"
+                  data-slug={slug}
+                  aria-pressed="false"
+                  aria-label={`Add ${title} to favorites`}
+                >
+                  <Star class="size-4" aria-hidden="true" />
+                </button>
+              </div>
+            ))}
           </div>
-        ))
-      }
-    </div>
+        </section>
+      ))
+    }
 
     <p id="tool-search-empty" class="mt-6 text-center text-sm text-fg-muted" hidden>
       No tools match your search.
@@ -37,20 +74,119 @@ import { tools } from "../tools/registry";
 </BaseLayout>
 
 <script>
+  import { searchTools } from "../lib/search";
+  import { getFavorites, getRecent, toggleFavorite } from "../lib/toolHistory";
+
   const input = document.getElementById("tool-search") as HTMLInputElement | null;
   const emptyState = document.getElementById("tool-search-empty");
+  const favoritesSection = document.getElementById("favorites-section");
+  const favoritesGrid = document.getElementById("favorites-grid");
+  const recentSection = document.getElementById("recent-section");
+  const recentGrid = document.getElementById("recent-grid");
+
+  function allCards(): HTMLElement[] {
+    return Array.from(document.querySelectorAll<HTMLElement>("[data-category-section] [data-tool-card]"));
+  }
+
+  function findCard(slug: string): HTMLElement | undefined {
+    return allCards().find((card) => card.dataset.slug === slug);
+  }
+
+  /** Clones an original card (from its category section) for display in
+   * Favorites/Recently used. Cloning keeps every card's markup identical
+   * (including the favorite-toggle button) without hand-duplicating it. */
+  function cloneCard(slug: string): HTMLElement | null {
+    const original = findCard(slug);
+    if (!original) return null;
+    const clone = original.cloneNode(true) as HTMLElement;
+    syncStarState(clone, slug);
+    return clone;
+  }
+
+  function syncStarState(scope: ParentNode, slug: string) {
+    const isFavorite = getFavorites().includes(slug);
+    scope.querySelectorAll<HTMLButtonElement>(`.favorite-toggle[data-slug="${CSS.escape(slug)}"]`).forEach((btn) => {
+      btn.setAttribute("aria-pressed", String(isFavorite));
+      btn.classList.toggle("text-brand", isFavorite);
+      btn.querySelector("svg")?.classList.toggle("fill-current", isFavorite);
+    });
+  }
+
+  function renderFavorites() {
+    if (!favoritesSection || !favoritesGrid) return;
+    const slugs = getFavorites();
+    favoritesGrid.innerHTML = "";
+    slugs.forEach((slug) => {
+      const clone = cloneCard(slug);
+      if (clone) favoritesGrid.appendChild(clone);
+    });
+    favoritesSection.hidden = slugs.length === 0;
+  }
+
+  function renderRecent() {
+    if (!recentSection || !recentGrid) return;
+    const slugs = getRecent().filter((slug) => !getFavorites().includes(slug));
+    recentGrid.innerHTML = "";
+    slugs.forEach((slug) => {
+      const clone = cloneCard(slug);
+      if (clone) recentGrid.appendChild(clone);
+    });
+    recentSection.hidden = slugs.length === 0;
+  }
+
+  function syncAllStars() {
+    document.querySelectorAll<HTMLElement>("[data-tool-card]").forEach((card) => {
+      const slug = card.dataset.slug;
+      if (slug) syncStarState(card, slug);
+    });
+  }
+
+  document.addEventListener("click", (event) => {
+    const button = (event.target as HTMLElement)?.closest<HTMLButtonElement>(".favorite-toggle");
+    if (!button?.dataset.slug) return;
+
+    const isFavorite = toggleFavorite(button.dataset.slug);
+    button.setAttribute("aria-label", `${isFavorite ? "Remove" : "Add"} ${button.dataset.slug} from favorites`);
+    syncAllStars();
+    renderFavorites();
+    renderRecent();
+  });
 
   input?.addEventListener("input", () => {
-    const query = input.value.trim().toLowerCase();
-    const cards = document.querySelectorAll<HTMLElement>("[data-tool-card]");
-    let visibleCount = 0;
+    const query = input.value.trim();
+    const isSearching = query.length > 0;
 
-    cards.forEach((card) => {
-      const matches = (card.dataset.search ?? "").includes(query);
-      card.hidden = !matches;
-      if (matches) visibleCount++;
+    if (favoritesSection) favoritesSection.hidden = isSearching || getFavorites().length === 0;
+    if (recentSection) recentSection.hidden = isSearching || getRecent().filter((s) => !getFavorites().includes(s)).length === 0;
+
+    const cards = allCards();
+    const matchedSlugs = new Set(
+      searchTools(
+        cards.map((card) => ({
+          slug: card.dataset.slug ?? "",
+          title: card.dataset.search ?? "",
+          description: "",
+        })),
+        query,
+      ).map((t) => t.slug),
+    );
+
+    let visibleCount = 0;
+    document.querySelectorAll<HTMLElement>("[data-category-section]").forEach((section) => {
+      const sectionCards = Array.from(section.querySelectorAll<HTMLElement>("[data-tool-card]"));
+      let sectionVisible = 0;
+      sectionCards.forEach((card) => {
+        const matches = !isSearching || matchedSlugs.has(card.dataset.slug ?? "");
+        card.hidden = !matches;
+        if (matches) sectionVisible++;
+      });
+      section.hidden = sectionVisible === 0;
+      visibleCount += sectionVisible;
     });
 
     if (emptyState) emptyState.hidden = visibleCount > 0;
   });
+
+  renderFavorites();
+  renderRecent();
 </script>

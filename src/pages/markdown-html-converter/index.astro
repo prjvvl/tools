@@ -1,0 +1,11 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+import MarkdownHtmlConverterTool from "../../tools/markdown-html-converter/MarkdownHtmlConverterTool";
+import { tools } from "../../tools/registry";
+
+const tool = tools.find((t) => t.slug === "markdown-html-converter")!;
+---
+
+<ToolLayout title={tool.title} description={tool.description}>
+  <MarkdownHtmlConverterTool client:only="react" />
+</ToolLayout>

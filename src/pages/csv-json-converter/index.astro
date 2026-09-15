@@ -1,0 +1,11 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+import CsvJsonConverter from "../../tools/csv-json-converter/CsvJsonConverter";
+import { tools } from "../../tools/registry";
+
+const tool = tools.find((t) => t.slug === "csv-json-converter")!;
+---
+
+<ToolLayout title={tool.title} description={tool.description}>
+  <CsvJsonConverter client:only="react" />
+</ToolLayout>

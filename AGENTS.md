@@ -50,10 +50,19 @@ so ignore anything you know about Trestle's Markdown content collection.
   more than its own UI to make sense, that's a sign the UI needs work, not
   that it needs a caption.
 - **Tool registry**: `src/tools/registry.ts`. One array, one entry per tool
-  (`slug`, `title`, `description`, `icon`). Drives the homepage grid and each
-  tool page's own meta description; adding an entry here doesn't create the
-  page, and creating the page without an entry here makes it unlisted (works,
-  but absent from the homepage grid).
+  (`slug`, `title`, `description`, `icon`, `category`). `category` must be one
+  of the ids in the `categories` array exported from the same file (Text,
+  Encoding & Data, Generators, Security & Crypto, Converters, Design, Web &
+  Network) — it drives which homepage section the tool's card renders under.
+  Drives the homepage grid and each tool page's own meta description; adding
+  an entry here doesn't create the page, and creating the page without an
+  entry here makes it unlisted (works, but absent from the homepage grid).
+- **Homepage extras**: `src/components/CommandPalette.astro` (the Ctrl/Cmd+K
+  tool switcher, mounted once in `Nav.astro`) and `src/lib/toolHistory.ts`
+  (localStorage-only favorites/recently-used, read by `src/pages/index.astro`
+  and written to by `ToolLayout.astro` on every tool page visit) are shared
+  site infrastructure, not tools — a new tool needs no changes to either,
+  it's picked up automatically once it has a registry entry.
 - **Site metadata, nav, feature flags**: `src/site.config.ts`. One file, not
   scattered config.
 - **Brand colors, fonts, spacing**: `src/styles/global.css`, inside the

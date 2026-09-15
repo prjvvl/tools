@@ -1,0 +1,11 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+import FileChecksumTool from "../../tools/file-checksum/FileChecksumTool";
+import { tools } from "../../tools/registry";
+
+const tool = tools.find((t) => t.slug === "file-checksum")!;
+---
+
+<ToolLayout title={tool.title} description={tool.description}>
+  <FileChecksumTool client:only="react" />
+</ToolLayout>

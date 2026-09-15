@@ -1,0 +1,11 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+import ImageConverterTool from "../../tools/image-converter/ImageConverterTool";
+import { tools } from "../../tools/registry";
+
+const tool = tools.find((t) => t.slug === "image-converter")!;
+---
+
+<ToolLayout title={tool.title} description={tool.description}>
+  <ImageConverterTool client:only="react" />
+</ToolLayout>

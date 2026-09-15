@@ -1,0 +1,211 @@
+import { useEffect, useMemo, useState } from "react";
+import { errorBannerClass, pillClass } from "../../lib/styles";
+import Select from "../../components/Select";
+import { parseCsvTable } from "./csv";
+import { AGGREGATE_OPTIONS, computePivot, type AggregateFn } from "./pivot";
+import { toCsv } from "./csv";
+
+const SAMPLE_PLACEHOLDER = "region,rep,deal_size\nWest,Ada,120\nWest,Grace,80\nEast,Ada,60\nEast,Grace,200";
+
+export default function CsvPivotTableTool() {
+  const [input, setInput] = useState("");
+  const [groupByCols, setGroupByCols] = useState<string[]>([]);
+  const [valueColumn, setValueColumn] = useState("");
+  const [aggFn, setAggFn] = useState<AggregateFn>("sum");
+
+  let headers: string[] = [];
+  let rows: string[][] = [];
+  let parseError: string | null = null;
+  if (input.trim()) {
+    try {
+      const parsed = parseCsvTable(input);
+      headers = parsed.headers;
+      rows = parsed.rows;
+    } catch (err) {
+      parseError = err instanceof Error ? err.message : "Failed to parse CSV.";
+    }
+  }
+
+  const headerSignature = JSON.stringify(headers);
+
+  // Reset column selections whenever the parsed header set actually changes
+  // (new paste with different columns), rather than on every keystroke.
+  useEffect(() => {
+    if (headers.length === 0) {
+      setGroupByCols([]);
+      setValueColumn("");
+      return;
+    }
+    const currentHeaders: string[] = JSON.parse(headerSignature);
+    setGroupByCols((prev) => prev.filter((c) => currentHeaders.includes(c)));
+    setValueColumn((prev) => (currentHeaders.includes(prev) ? prev : currentHeaders[0]));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [headerSignature]);
+
+  function toggleGroupByCol(col: string) {
+    setGroupByCols((prev) => (prev.includes(col) ? prev.filter((c) => c !== col) : [...prev, col]));
+  }
+
+  const pivot = useMemo(() => {
+    if (headers.length === 0 || groupByCols.length === 0) return null;
+    if (aggFn !== "count" && !valueColumn) return null;
+    return computePivot(headers, rows, groupByCols, valueColumn, aggFn);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [headerSignature, rows, groupByCols, valueColumn, aggFn]);
+
+  const csvBlobUrl = useMemo(() => {
+    if (!pivot || pivot.rows.length === 0) return null;
+    const csvText = toCsv(pivot.headers.map(String), pivot.rows);
+    return URL.createObjectURL(new Blob([csvText], { type: "text/csv" }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pivot]);
+
+  useEffect(() => {
+    return () => {
+      if (csvBlobUrl) URL.revokeObjectURL(csvBlobUrl);
+    };
+  }, [csvBlobUrl]);
+
+  return (
+    <div className="mx-auto max-w-5xl rounded-card border border-border bg-surface p-6 md:p-8">
+      <label htmlFor="pivot-input" className="block text-sm font-medium text-fg">
+        CSV (first row = headers)
+      </label>
+      <textarea
+        id="pivot-input"
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        placeholder={SAMPLE_PLACEHOLDER}
+        spellCheck={false}
+        className="mt-2 h-40 w-full rounded-card border border-border bg-bg p-3 font-mono text-sm text-fg placeholder:text-fg-muted focus:border-brand-300 focus:outline-none"
+      />
+
+      {parseError && (
+        <div className={`mt-4 ${errorBannerClass}`} role="alert">
+          {parseError}
+        </div>
+      )}
+
+      {headers.length > 0 && (
+        <div className="mt-6 grid gap-6 border-t border-border pt-6 md:grid-cols-2">
+          <div>
+            <p className="text-sm font-medium text-fg">Group by column(s)</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {headers.map((h) => (
+                <button
+                  key={h}
+                  type="button"
+                  onClick={() => toggleGroupByCol(h)}
+                  aria-pressed={groupByCols.includes(h)}
+                  className={pillClass(groupByCols.includes(h))}
+                >
+                  {h}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-4 sm:flex-row md:flex-col lg:flex-row">
+            <div className="flex-1">
+              <label htmlFor="pivot-value-col" className="block text-sm font-medium text-fg">
+                Value column
+              </label>
+              <div className="mt-2">
+                <Select
+                  id="pivot-value-col"
+                  value={valueColumn}
+                  onChange={(e) => setValueColumn(e.target.value)}
+                  disabled={aggFn === "count"}
+                  className="w-full"
+                >
+                  {headers.map((h) => (
+                    <option key={h} value={h}>
+                      {h}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+              {aggFn === "count" && (
+                <p className="mt-1 text-xs text-fg-muted">Ignored: Count just counts rows per group.</p>
+              )}
+            </div>
+
+            <div className="flex-1">
+              <label htmlFor="pivot-agg-fn" className="block text-sm font-medium text-fg">
+                Aggregate
+              </label>
+              <div className="mt-2">
+                <Select
+                  id="pivot-agg-fn"
+                  value={aggFn}
+                  onChange={(e) => setAggFn(e.target.value as AggregateFn)}
+                  className="w-full"
+                >
+                  {AGGREGATE_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {headers.length > 0 && groupByCols.length === 0 && (
+        <p className="mt-4 text-sm text-fg-muted">Select at least one column to group by to see the pivot result.</p>
+      )}
+
+      {pivot && (
+        <div className="mt-6 border-t border-border pt-6">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm font-medium text-fg">
+              Result{" "}
+              <span className="font-normal text-fg-muted">
+                ({pivot.rows.length} group{pivot.rows.length === 1 ? "" : "s"})
+              </span>
+            </p>
+            {csvBlobUrl && (
+              <a href={csvBlobUrl} download="pivot.csv" className="text-sm font-medium text-brand hover:underline">
+                Download as CSV
+              </a>
+            )}
+          </div>
+
+          {pivot.skippedCount > 0 && (
+            <p className="mt-2 text-xs text-fg-muted">
+              Skipped {pivot.skippedCount} non-numeric or blank value{pivot.skippedCount === 1 ? "" : "s"} in "
+              {valueColumn}".
+            </p>
+          )}
+
+          <div className="mt-3 w-full overflow-x-auto rounded-card border border-border">
+            <table className="w-full min-w-max border-collapse text-sm" aria-live="polite">
+              <thead>
+                <tr className="border-b border-border bg-bg">
+                  {pivot.headers.map((h) => (
+                    <th key={h} className="px-3 py-2 text-left font-medium text-fg">
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {pivot.rows.map((row, i) => (
+                  <tr key={i} className="border-b border-border last:border-b-0">
+                    {row.map((cell, j) => (
+                      <td key={j} className="px-3 py-2 text-fg-muted">
+                        {cell}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

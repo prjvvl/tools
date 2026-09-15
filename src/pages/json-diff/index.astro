@@ -1,0 +1,11 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+import JsonDiffTool from "../../tools/json-diff/JsonDiffTool";
+import { tools } from "../../tools/registry";
+
+const tool = tools.find((t) => t.slug === "json-diff")!;
+---
+
+<ToolLayout title={tool.title} description={tool.description}>
+  <JsonDiffTool client:only="react" />
+</ToolLayout>

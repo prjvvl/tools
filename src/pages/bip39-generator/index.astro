@@ -1,0 +1,11 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+import Bip39GeneratorTool from "../../tools/bip39-generator/Bip39GeneratorTool";
+import { tools } from "../../tools/registry";
+
+const tool = tools.find((t) => t.slug === "bip39-generator")!;
+---
+
+<ToolLayout title={tool.title} description={tool.description}>
+  <Bip39GeneratorTool client:only="react" />
+</ToolLayout>

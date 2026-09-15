@@ -1,0 +1,11 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+import TokenGeneratorTool from "../../tools/token-generator/TokenGeneratorTool";
+import { tools } from "../../tools/registry";
+
+const tool = tools.find((t) => t.slug === "token-generator")!;
+---
+
+<ToolLayout title={tool.title} description={tool.description}>
+  <TokenGeneratorTool client:only="react" />
+</ToolLayout>

@@ -1,0 +1,11 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+import UserAgentParserTool from "../../tools/user-agent-parser/UserAgentParserTool";
+import { tools } from "../../tools/registry";
+
+const tool = tools.find((t) => t.slug === "user-agent-parser")!;
+---
+
+<ToolLayout title={tool.title} description={tool.description}>
+  <UserAgentParserTool client:only="react" />
+</ToolLayout>

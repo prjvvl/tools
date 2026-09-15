@@ -1,0 +1,11 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+import JsonGraphVisualizerTool from "../../tools/json-graph-visualizer/JsonGraphVisualizerTool";
+import { tools } from "../../tools/registry";
+
+const tool = tools.find((t) => t.slug === "json-graph-visualizer")!;
+---
+
+<ToolLayout title={tool.title} description={tool.description}>
+  <JsonGraphVisualizerTool client:only="react" />
+</ToolLayout>

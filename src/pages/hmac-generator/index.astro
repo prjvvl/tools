@@ -1,0 +1,11 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+import HmacGeneratorTool from "../../tools/hmac-generator/HmacGeneratorTool";
+import { tools } from "../../tools/registry";
+
+const tool = tools.find((t) => t.slug === "hmac-generator")!;
+---
+
+<ToolLayout title={tool.title} description={tool.description}>
+  <HmacGeneratorTool client:only="react" />
+</ToolLayout>
