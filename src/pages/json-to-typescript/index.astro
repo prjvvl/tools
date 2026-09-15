@@ -1,0 +1,11 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+import JsonToTypescriptTool from "../../tools/json-to-typescript/JsonToTypescriptTool";
+import { tools } from "../../tools/registry";
+
+const tool = tools.find((t) => t.slug === "json-to-typescript")!;
+---
+
+<ToolLayout title={tool.title} description={tool.description}>
+  <JsonToTypescriptTool client:only="react" />
+</ToolLayout>
