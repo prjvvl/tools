@@ -1,0 +1,11 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+import ColorPaletteExtractorTool from "../../tools/color-palette-extractor/ColorPaletteExtractorTool";
+import { tools } from "../../tools/registry";
+
+const tool = tools.find((t) => t.slug === "color-palette-extractor")!;
+---
+
+<ToolLayout title={tool.title} description={tool.description}>
+  <ColorPaletteExtractorTool client:only="react" />
+</ToolLayout>
