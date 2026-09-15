@@ -18,3 +18,15 @@ const { title, description } = Astro.props;
     <slot />
   </div>
 </BaseLayout>
+
+<script>
+  // Records this page as a visited tool for the homepage's "Recently used"
+  // section. Derived from the URL client-side (rather than a slug prop
+  // threaded through every tool page) since Astro's base path and trailing
+  // slash can vary between dev and the static build output.
+  import { recordVisit } from "../lib/toolHistory";
+
+  const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+  const slug = window.location.pathname.replace(base, "").replace(/^\/|\/$/g, "");
+  if (slug) recordVisit(slug);
+</script>
