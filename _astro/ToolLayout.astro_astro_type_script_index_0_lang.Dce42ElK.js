@@ -1,0 +1,1 @@
+import{r as e}from"./toolHistory.B1F1lgpJ.js";var t=`/tools`.replace(/\/$/,``),n=window.location.pathname.replace(t,``).replace(/^\/|\/$/g,``);n&&e(n);
