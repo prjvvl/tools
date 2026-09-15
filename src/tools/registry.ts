@@ -412,7 +412,7 @@ export const tools = [
   {
     slug: "json-graph-visualizer",
     title: "JSON Graph Visualizer",
-    description: "Turn JSON, YAML, XML, or CSV into an interactive, zoomable node graph.",
+    description: "Turn JSON into an interactive, zoomable node graph.",
     icon: Share2,
     category: "encoding",
   },

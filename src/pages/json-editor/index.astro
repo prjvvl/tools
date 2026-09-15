@@ -1,0 +1,11 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+import JsonEditorTool from "../../tools/json-editor/JsonEditorTool";
+import { tools } from "../../tools/registry";
+
+const tool = tools.find((t) => t.slug === "json-editor")!;
+---
+
+<ToolLayout title={tool.title} description={tool.description}>
+  <JsonEditorTool client:only="react" />
+</ToolLayout>
