@@ -1,6 +1,31 @@
 import { useState } from "react";
 import { buttonVariantClass, errorBannerClass } from "../../lib/styles";
 
+// Repeatedly strips one layer of JSON-string escaping (backslash-escaped
+// quotes, possibly without surrounding quotes) until the result is valid
+// JSON or no further layer can be removed.
+function unescapeJsonString(input: string): string {
+  let current = input.trim();
+  for (let i = 0; i < 10; i++) {
+    const candidate = current.startsWith('"') && current.endsWith('"') ? current : `"${current}"`;
+    let unwrapped: unknown;
+    try {
+      unwrapped = JSON.parse(candidate);
+    } catch {
+      break;
+    }
+    if (typeof unwrapped !== "string" || unwrapped === current) break;
+    current = unwrapped;
+    try {
+      JSON.parse(current);
+      break;
+    } catch {
+      // Still escaped: loop again to strip another layer.
+    }
+  }
+  return current;
+}
+
 export default function JsonFormatter() {
   const [value, setValue] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -23,6 +48,24 @@ export default function JsonFormatter() {
 
   function handleMinify() {
     transform((parsed) => JSON.stringify(parsed));
+  }
+
+  function handleUnescape() {
+    if (!value.trim()) return;
+    try {
+      const unescaped = unescapeJsonString(value);
+      let result = unescaped;
+      try {
+        result = JSON.stringify(JSON.parse(unescaped), null, 2);
+      } catch {
+        // Unescaped text still isn't valid JSON on its own; leave it as-is
+        // so the user can see and fix the remainder.
+      }
+      setValue(result);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not unescape this string.");
+    }
   }
 
   async function handleCopy() {
@@ -69,6 +112,9 @@ export default function JsonFormatter() {
         </button>
         <button type="button" onClick={handleMinify} className={buttonVariantClass.secondary}>
           Minify
+        </button>
+        <button type="button" onClick={handleUnescape} className={buttonVariantClass.secondary}>
+          Unescape
         </button>
         <button type="button" onClick={handleCopy} className={buttonVariantClass.secondary}>
           {copyStatus === "copied" ? "Copied!" : copyStatus === "failed" ? "Copy failed" : "Copy"}
