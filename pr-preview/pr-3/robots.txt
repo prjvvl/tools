@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://prjvvl.github.io/tools/pr-preview/pr-3/sitemap-index.xml

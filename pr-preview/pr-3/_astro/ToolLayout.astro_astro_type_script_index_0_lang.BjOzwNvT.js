@@ -1,0 +1,1 @@
+import{r as e}from"./toolHistory.B1F1lgpJ.js";var t=`/tools/pr-preview/pr-3/`.replace(/\/$/,``),n=window.location.pathname.replace(t,``).replace(/^\/|\/$/g,``);n&&e(n);
