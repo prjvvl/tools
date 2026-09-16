@@ -26,6 +26,44 @@ function unescapeJsonString(input: string): string {
   return current;
 }
 
+// Parses text into a JSON value, unescaping it first if it's a
+// backslash-escaped JSON string rather than plain JSON.
+function tryParseJsonValue(text: string): unknown {
+  const trimmed = text.trim();
+  if (!trimmed) return undefined;
+  if (trimmed[0] !== "{" && trimmed[0] !== "[" && trimmed[0] !== '"') return undefined;
+  try {
+    return JSON.parse(trimmed);
+  } catch {
+    const unescaped = unescapeJsonString(trimmed);
+    if (unescaped === trimmed) return undefined;
+    try {
+      return JSON.parse(unescaped);
+    } catch {
+      return undefined;
+    }
+  }
+}
+
+// Walks the parsed JSON tree and recursively unescapes any string value
+// that is itself an escaped/stringified object or array, so nested layers
+// of escaping (e.g. a field whose value is a JSON-stringified object) get
+// resolved too, not just the outermost one.
+function deepUnescape(value: unknown): unknown {
+  if (typeof value === "string") {
+    const parsed = tryParseJsonValue(value);
+    if (parsed !== undefined && typeof parsed === "object" && parsed !== null) {
+      return deepUnescape(parsed);
+    }
+    return value;
+  }
+  if (Array.isArray(value)) return value.map(deepUnescape);
+  if (value && typeof value === "object") {
+    return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, deepUnescape(v)]));
+  }
+  return value;
+}
+
 export default function JsonFormatter() {
   const [value, setValue] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -56,7 +94,7 @@ export default function JsonFormatter() {
       const unescaped = unescapeJsonString(value);
       let result = unescaped;
       try {
-        result = JSON.stringify(JSON.parse(unescaped), null, 2);
+        result = JSON.stringify(deepUnescape(JSON.parse(unescaped)), null, 2);
       } catch {
         // Unescaped text still isn't valid JSON on its own; leave it as-is
         // so the user can see and fix the remainder.
