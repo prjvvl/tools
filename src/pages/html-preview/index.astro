@@ -1,0 +1,11 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+import HtmlPreview from "../../tools/html-preview/HtmlPreview";
+import { tools } from "../../tools/registry";
+
+const tool = tools.find((t) => t.slug === "html-preview")!;
+---
+
+<ToolLayout title={tool.title} description={tool.description}>
+  <HtmlPreview client:only="react" />
+</ToolLayout>

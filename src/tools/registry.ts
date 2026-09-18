@@ -30,6 +30,7 @@ import {
   ListTree,
   Lock,
   LockKeyhole,
+  Monitor,
   Network,
   Paintbrush,
   Palette,
@@ -174,6 +175,13 @@ export const tools = [
     title: "Markdown Preview",
     description: "Preview GitHub-flavored Markdown and Mermaid diagrams live, right in your browser.",
     icon: FileText,
+    category: "text",
+  },
+  {
+    slug: "html-preview",
+    title: "HTML Preview",
+    description: "Write HTML, CSS, and JavaScript and see a live, sandboxed preview as you type.",
+    icon: Monitor,
     category: "text",
   },
 
