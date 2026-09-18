@@ -1,36 +1,79 @@
 import { useEffect, useRef, useState } from "react";
-import { BookOpen, Check, Code2, Copy, Download, Eye, FolderOpen, X } from "lucide-react";
+import { BookOpen, Check, Copy, Download, Eye, FolderOpen, X } from "lucide-react";
 import { buttonVariantClass, pillClass } from "../../lib/styles";
-import { EXAMPLE_HTML } from "./example";
+import { EXAMPLE_CSS, EXAMPLE_HTML, EXAMPLE_JS } from "./example";
 
+type Tab = "html" | "css" | "js";
 type MobileView = "editor" | "preview";
 type CopyStatus = "idle" | "copied" | "failed";
 
 const DEBOUNCE_MS = 200;
 
+const TABS: { id: Tab; label: string; accept: string; placeholder: string }[] = [
+  { id: "html", label: "HTML", accept: ".html,.htm,.txt", placeholder: "<h1>Hello, world!</h1>" },
+  { id: "css", label: "CSS", accept: ".css,.txt", placeholder: "h1 { color: #7c3aed; }" },
+  { id: "js", label: "JS", accept: ".js,.txt", placeholder: "console.log('Hello!');" },
+];
+
+function buildDocument(html: string, css: string, js: string): string {
+  return `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+${css}
+</style>
+</head>
+<body>
+${html}
+<script>
+${js}
+</script>
+</body>
+</html>
+`;
+}
+
 export default function HtmlPreview() {
-  const [source, setSource] = useState("");
-  const [debouncedSource, setDebouncedSource] = useState("");
+  const [tab, setTab] = useState<Tab>("html");
+  const [html, setHtml] = useState("");
+  const [css, setCss] = useState("");
+  const [js, setJs] = useState("");
+  const [debounced, setDebounced] = useState({ html: "", css: "", js: "" });
   const [mobileView, setMobileView] = useState<MobileView>("editor");
   const [copyStatus, setCopyStatus] = useState<CopyStatus>("idle");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const timeout = setTimeout(() => setDebouncedSource(source), DEBOUNCE_MS);
+    const timeout = setTimeout(() => setDebounced({ html, css, js }), DEBOUNCE_MS);
     return () => clearTimeout(timeout);
-  }, [source]);
+  }, [html, css, js]);
+
+  const sourceByTab: Record<Tab, [string, (next: string) => void]> = {
+    html: [html, setHtml],
+    css: [css, setCss],
+    js: [js, setJs],
+  };
+  const [activeSource, setActiveSource] = sourceByTab[tab];
+  const activeTabMeta = TABS.find((t) => t.id === tab)!;
+
+  function loadExample() {
+    setHtml(EXAMPLE_HTML);
+    setCss(EXAMPLE_CSS);
+    setJs(EXAMPLE_JS);
+  }
 
   function handleFile(file: File) {
     const reader = new FileReader();
-    reader.onload = () => setSource(String(reader.result ?? ""));
+    reader.onload = () => setActiveSource(String(reader.result ?? ""));
     reader.readAsText(file);
   }
 
   async function handleCopy() {
-    if (!source) return;
+    if (!activeSource) return;
     try {
-      await navigator.clipboard.writeText(source);
+      await navigator.clipboard.writeText(activeSource);
       setCopyStatus("copied");
     } catch {
       setCopyStatus("failed");
@@ -39,8 +82,7 @@ export default function HtmlPreview() {
   }
 
   function handleDownload() {
-    if (!source) return;
-    const blob = new Blob([source], { type: "text/html;charset=utf-8" });
+    const blob = new Blob([buildDocument(html, css, js)], { type: "text/html;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -54,18 +96,18 @@ export default function HtmlPreview() {
   return (
     <div className="mx-auto max-w-6xl">
       <div className="flex flex-wrap items-center gap-3 rounded-card border border-border bg-surface p-3">
-        <button type="button" onClick={() => setSource(EXAMPLE_HTML)} className={buttonVariantClass.secondary}>
+        <button type="button" onClick={loadExample} className={buttonVariantClass.secondary}>
           <BookOpen className="size-4" aria-hidden="true" />
           Load Example
         </button>
         <button type="button" onClick={() => fileInputRef.current?.click()} className={buttonVariantClass.secondary}>
           <FolderOpen className="size-4" aria-hidden="true" />
-          Open File
+          Open File into {activeTabMeta.label}
         </button>
         <input
           ref={fileInputRef}
           type="file"
-          accept=".html,.htm,.txt"
+          accept={activeTabMeta.accept}
           className="hidden"
           onChange={(e) => {
             const file = e.target.files?.[0];
@@ -82,7 +124,7 @@ export default function HtmlPreview() {
           ) : (
             <Copy className="size-4" aria-hidden="true" />
           )}
-          {copyStatus === "copied" ? "Copied!" : copyStatus === "failed" ? "Copy failed" : "Copy HTML"}
+          {copyStatus === "copied" ? "Copied!" : copyStatus === "failed" ? "Copy failed" : `Copy ${activeTabMeta.label}`}
         </button>
         <button type="button" onClick={handleDownload} className={buttonVariantClass.primary}>
           <Download className="size-4" aria-hidden="true" />
@@ -90,15 +132,28 @@ export default function HtmlPreview() {
         </button>
       </div>
 
-      <div className="mt-4 flex gap-2 lg:hidden">
-        <button type="button" onClick={() => setMobileView("editor")} className={pillClass(mobileView === "editor")}>
-          <Code2 className="size-4" aria-hidden="true" />
-          Editor
-        </button>
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        <div className="flex gap-2" role="tablist" aria-label="Source">
+          {TABS.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              role="tab"
+              aria-selected={tab === t.id}
+              onClick={() => {
+                setTab(t.id);
+                setMobileView("editor");
+              }}
+              className={pillClass(tab === t.id)}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
         <button
           type="button"
           onClick={() => setMobileView("preview")}
-          className={pillClass(mobileView === "preview")}
+          className={`${pillClass(mobileView === "preview")} lg:hidden`}
         >
           <Eye className="size-4" aria-hidden="true" />
           Preview
@@ -107,22 +162,22 @@ export default function HtmlPreview() {
 
       <div className="mt-4 grid gap-6 lg:grid-cols-2">
         <div className={paneClass("editor")}>
-          <label htmlFor="html-source" className="block text-sm font-medium text-fg">
-            HTML source
+          <label htmlFor="source-editor" className="block text-sm font-medium text-fg">
+            {activeTabMeta.label} source
           </label>
           <textarea
-            id="html-source"
-            value={source}
-            onChange={(e) => setSource(e.target.value)}
+            id="source-editor"
+            value={activeSource}
+            onChange={(e) => setActiveSource(e.target.value)}
             onDragOver={(e) => e.preventDefault()}
             onDrop={(e) => {
               e.preventDefault();
               const file = e.dataTransfer.files?.[0];
               if (file) handleFile(file);
             }}
-            placeholder="Paste or drop an .html file, or type HTML here..."
+            placeholder={`Paste or drop a file, or type ${activeTabMeta.label} here...\ne.g. ${activeTabMeta.placeholder}`}
             spellCheck={false}
-            className="mt-2 h-[70vh] w-full resize-none rounded-card border border-border bg-bg p-3 font-mono text-sm text-fg placeholder:text-fg-muted focus:border-brand-300 focus:outline-none"
+            className="mt-2 h-[65vh] w-full resize-none rounded-card border border-border bg-bg p-3 font-mono text-sm text-fg placeholder:text-fg-muted focus:border-brand-300 focus:outline-none"
           />
         </div>
 
@@ -134,7 +189,7 @@ export default function HtmlPreview() {
           <div className="mt-2 h-[70vh] overflow-hidden rounded-card border border-border bg-white">
             <iframe
               title="HTML preview"
-              srcDoc={debouncedSource}
+              srcDoc={buildDocument(debounced.html, debounced.css, debounced.js)}
               sandbox="allow-scripts"
               className="h-full w-full"
             />
